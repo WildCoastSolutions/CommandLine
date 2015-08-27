@@ -8,12 +8,12 @@ nuget {
       licenseUrl: "http://www.opensource.org/licenses/mit-license.php";
       iconUrl: "http://wildcoast.nz/nuget.png";
       requireLicenseAcceptance:false;
-      summary:@"Simple, header only, no dependency command line handling library.";
-      description: @"Simple, header only, no dependency command line handling library with an emphasis on being clean and easy to use.";
+      summary:@"Simple, header only, no dependency, cross platform command line handling library.";
+      description: @"Simple, header only, no dependency, cross platform command line handling library with an emphasis on being clean and easy to use.";
       releaseNotes: "";
       projectUrl: "https://github.com/WildCoastSolutions/CommandLine";
       copyright: Copyright (c) 2014-2015 Wild Coast Solutions. All rights reserved.;
-      tags: { logging, native, c++, simple };
+      tags: { command line, native, c++, simple, cross platform };
    };
  
    files {
