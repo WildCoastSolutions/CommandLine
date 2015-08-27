@@ -13,10 +13,13 @@ More on this library and others like it can be found at [http://wildcoast.nz/ope
 using namespace Wild::CommandLine;
 using namespace std;
 
+// This is a simple app that adds or subtracts using
+// two numbers provided on the command line
 // Sample command line - maths.exe -a 3 -b 5 --operation add
+
 int main(int argc, char* argv[])
 {
-     // Setup args that this application supports, in this case the app adds or subtracts using the two numbers provided
+    // Setup args that this application supports, 
     Args args({
         // name, letter, description
         Flag("version", "v", "Display version information"),
@@ -47,12 +50,13 @@ int main(int argc, char* argv[])
         return;
     }
 
-    // We know that number-a is set since Parse would have failed otherwise as it is required
-    // We know that number-b is set either by the command line or by the default value
+    // We know that number-a is set since it's required
+    // We know that number-b is set either by the command line
+    // or by the default value
     int a = args.GetAsInt("number-a");  // Use the full name to access
     int b = args.GetAsInt("number-b");
 
-    // We know that operation at least has a default value if it hasn't been set
+    // Operation has a default value if it hasn't been set by the user
     string operation = args.Get("operation");
     if (operation == "add")
         cout << a << " + " << b << " = " << a + b << endl;
@@ -61,9 +65,10 @@ int main(int argc, char* argv[])
 
 ```
 
-The above code results in the following being printed to console
+The above code with the sample command line results in the following being printed to console
 
 ```
+// maths.exe -a 3 -b 5 --operation add
 3 + 5 = 8
 ```
 
