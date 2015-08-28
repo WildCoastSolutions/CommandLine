@@ -128,7 +128,7 @@ namespace Wild
             {
                 // If no set was specified that means we allow any value for this argument
                 if (possibleValues.size() == 0) return true;
-                return (std::find(possibleValues.begin(), possibleValues.end(), value) != possibleValues.end());
+                return (possibleValues.find(value) != possibleValues.end());
             }
 
             bool IsFlag() { return isFlag; }
