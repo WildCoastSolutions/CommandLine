@@ -1,6 +1,6 @@
 nuget {
    nuspec {
-      id = WildCoastCommandLine;
+      id = WildCommandLine;
       version : 1.0.0.0;
       title: Wild Coast Command Line;
       authors: {Wild Coast Solutions};
