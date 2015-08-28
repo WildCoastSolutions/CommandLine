@@ -82,7 +82,7 @@ void TestConstruction()
 
 int main(int argc, char* argv[])
 {
-    ReadmeSampleCode();
+    //ReadmeSampleCode();
     TestConstruction();
 
     Args args({
