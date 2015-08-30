@@ -96,9 +96,9 @@ All code is in the `Wild::CommandLine` namespace.
 
 # Using
 
-First you need to specify all the flags and arguments your application is going to support, each with name, letter, description, and optionally a list of allowed value, a default value and whether it is required or not.
+First you need to specify all the flags and arguments your application is going to support. Each has a name, letter, description, and optionally a list of allowed values, a default value and whether it is required or not.
 
-Once this is established, Parse is called with the given command line and the user values passed in are stored. Then they can be queried and the relevant action taken.
+Once this is established, Parse is called with the given command line (argv). Then you can get the state of args and their values and take action.
 
 **Flag vs Arg**
 
@@ -131,7 +131,7 @@ For example: We want to allow the user to supply a colour on the command line, o
 
 ## Parsing
 
-Call `args.Parse` with `argc` and `argv` to parse the command line. Parse will print an error message and return false if parsing failed. It can fail for the following reasons:
+Call `args.Parse` with `argc` and `argv` to parse the command line. Parse will print an error message and return false if parsing fails. It can fail for the following reasons:
 
 * an argument/flag was given that wasn't specified in the Args constructor
 * a required argument/flag wasn't given
