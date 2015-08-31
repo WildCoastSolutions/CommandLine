@@ -171,6 +171,14 @@ make
 Test\CommandLineTest
 ```
 
+Note that the [Unit Testing](https://github.com/WildCoastSolutions/UnitTesting) library is required alongside this library to compile the tests. E.g.
+
+```
+  wild/
+     Logging/
+     UnitTesting/
+```
+
 ## Scaling Up
 
 If you need to go beyond what this library offers, boost program_options is a good next step.
