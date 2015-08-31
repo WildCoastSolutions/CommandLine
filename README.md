@@ -161,9 +161,25 @@ Supported accessors are:
 ```
 
 
-## Platforms
+## Compiling And Running Tests
 
-This library was built on VS2013 but should work on earlier versions though it does require C++11 features. It has been tested with gcc 4.8.2. The Linux build uses cmake, to test the lib it you can clone the whole project, enter the directory and use:
+Note that the [Unit Testing](https://github.com/WildCoastSolutions/UnitTesting) library is required alongside this library to compile the tests. E.g.
+
+```
+  Wild/
+     CommandLine/
+     UnitTesting/
+```
+
+### Windows
+
+`CommandLine.sln` contains the library and test projects, compilation also runs the tests.
+
+It was built with VS2013 but should work with other versions though it does require C++11 features.
+
+### Linux
+
+The Linux build uses cmake, to test the lib it you can clone it, enter the directory and use
 
 ```
 cmake .
@@ -171,13 +187,6 @@ make
 Test\CommandLineTest
 ```
 
-Note that the [Unit Testing](https://github.com/WildCoastSolutions/UnitTesting) library is required alongside this library to compile the tests. E.g.
-
-```
-  wild/
-     CommandLine/
-     UnitTesting/
-```
 
 ## Scaling Up
 
