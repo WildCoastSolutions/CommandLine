@@ -175,7 +175,7 @@ Note that the [Unit Testing](https://github.com/WildCoastSolutions/UnitTesting) 
 
 ```
   wild/
-     Logging/
+     CommandLine/
      UnitTesting/
 ```
 
