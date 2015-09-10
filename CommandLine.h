@@ -25,8 +25,8 @@
 
 namespace Wild
 {
-	namespace CommandLine
-	{
+    namespace CommandLine
+    {
 
         // Represents a single argument
         // e.g. -v, --version
@@ -418,7 +418,7 @@ namespace Wild
             std::map<std::string, std::string> m_argLookup;
             std::map<std::string, std::string> m_argValues;
         };
-	}
+    }
 }
 
 #endif // #ifndef WILD_COMMANDLINE_COMMANDLINE_H
