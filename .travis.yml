@@ -16,4 +16,4 @@ install:
   - make
 
 script:
-  - Test/CommandLine
+  - ./Test/CommandLineTest
