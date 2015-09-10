@@ -1,4 +1,16 @@
-
+//
+// Author       Wild Coast Solutions
+//              David Hamilton
+//
+// This file is distributed under the MIT License. See the accompanying file
+// LICENSE.txt or http://www.opensource.org/licenses/mit-license.php for terms
+// and conditions.
+//
+// This file contains tests for the command line handling library in
+// CommandLine.h
+// 
+// Testing is done by the unit testing library from
+// https://github.com/WildCoastSolutions/UnitTesting
 
 #include "CommandLine.h"
 #include "UnitTesting.h"
