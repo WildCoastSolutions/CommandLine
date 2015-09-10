@@ -1,0 +1,16 @@
+language: cpp
+
+compiler:
+  - clang
+  - gcc
+
+env:
+  - BUILD_TYPE=Debug
+  - BUILD_TYPE=Release
+
+install:
+  - cmake .
+  - make
+
+script:
+  - Test/CommandLine
