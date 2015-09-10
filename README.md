@@ -4,7 +4,7 @@ This is a simple, header only, no dependency, cross platform command line handli
 
 More on this library and others like it can be found at [http://wildcoast.nz/open-source](http://wildcoast.nz/open-source).
 
-[Download the latest version directly](https://raw.githubusercontent.com/WildCoastSolutions/CommandLine/master/CommandLine.h).
+[Download the latest version directly (right click, download))](https://raw.githubusercontent.com/WildCoastSolutions/CommandLine/master/CommandLine.h).
 
 Travis CI build & test status: [![Build Status](https://api.travis-ci.org/WildCoastSolutions/CommandLine.svg?branch=master)](https://travis-ci.org/WildCoastSolutions/CommandLine)
 
@@ -83,6 +83,8 @@ The above code with the sample command line results in the following being print
 ## Download
 
 All you need to use this library is to put `CommandLine.h` in your project and include it in your code.
+
+[Download the latest version here (right click, download))](https://raw.githubusercontent.com/WildCoastSolutions/CommandLine/master/CommandLine.h).
 
 ## Nuget
 
