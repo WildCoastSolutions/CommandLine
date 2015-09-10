@@ -4,6 +4,12 @@ This is a simple, header only, no dependency, cross platform command line handli
 
 More on this library and others like it can be found at [http://wildcoast.nz/open-source](http://wildcoast.nz/open-source).
 
+[Download the latest version directly](https://raw.githubusercontent.com/WildCoastSolutions/CommandLine/master/CommandLine.h).
+
+Travis CI build & test status: [![Build Status](https://api.travis-ci.org/WildCoastSolutions/CommandLine.svg?branch=master)](https://travis-ci.org/WildCoastSolutions/CommandLine)
+
+
+
 
 # Sample Code
 
