@@ -8,6 +8,8 @@
 //
 // This file contains an implementation of a simple command line argument 
 // handling library for console applications. 
+//
+// Project url: https://github.com/WildCoastSolutions/CommandLine
 
 #ifndef WILD_COMMANDLINE_COMMANDLINE_H
 #define WILD_COMMANDLINE_COMMANDLINE_H
