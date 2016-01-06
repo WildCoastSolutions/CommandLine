@@ -1,7 +1,7 @@
 nuget {
    nuspec {
       id = WildCommandLine;
-      version : 1.0.1.0;
+      version : 1.0.2.0;
       title: Wild Coast Command Line;
       authors: {Wild Coast Solutions};
       owners: {Wild Coast Solutions};
@@ -10,10 +10,10 @@ nuget {
       requireLicenseAcceptance:false;
       summary:@"Simple, header only, no dependency, cross platform command line handling library.";
       description: @"Simple, header only, no dependency, cross platform command line handling library with an emphasis on being clean and easy to use.";
-      releaseNotes: "Fixed linux build issue.";
+      releaseNotes: "";
       projectUrl: "https://github.com/WildCoastSolutions/CommandLine";
-      copyright: Copyright (c) 2014-2015 Wild Coast Solutions. All rights reserved.;
-      tags: { command line, native, c++, simple, cross platform };
+      copyright: Copyright (c) 2014-2016 Wild Coast Solutions. All rights reserved.;
+      tags: { command line, native, c++, simple, cross platform, header only, no dependency };
    };
  
    files {
