@@ -20,33 +20,40 @@ using namespace std;
 
 void ReadmeSampleCode()
 {
-    // Setup args that this application supports, in this case the app adds or subtracts using the two numbers provided
+    // Setup args that this application supports, in this case it is a simple video transcoding app
+    // It takes an input file, a new bitrate and resolution, and writes to the given output file
     Args args({
-        // name, letter, description
-        Flag("version", "v", "Display version information"),
-        Flag("please", "p", "The magic word", Flag::Is::Required),
-        
-        // name, letter, description, whether required
-        Arg("number-a", "a", "First number", Arg::Is::Required),
+        // The order of Flags and Options given on the command line doesn't matter
+        // The order of PositionalArgs only matters relative to other PositionalArgs
 
-        // name, letter, description, default value
-        Arg("number-b", "b", "Second number", "4"),
+        // A PositionalArg has no letter or name associated with it, it is assigned 
+        // by virtue of where it appears on the command line.
+        PositionalArg("input", "Input video file path"),
+        PositionalArg("output", "Output video file path"),
+
+        // Flag - name, letter, description
+        Flag("version", "v", "Display version information"),
+        Flag("debug", "d", "Print debug information"),
+        
+        // Option - name, letter, description, whether it is required or not
+        // An option is generally not required, but this is possible when you want to be name the required option rather
+        // than use a positional argument with no name
+        Option("bitrate", "b", "Bitrate of output video in Kbps", Is::Required),
 
         // name, letter, description, possible values, default value (setting a default value means it's optional on the command line)
-        Arg("operation", "o", "Operation to use", { "add", "subtract" }, "add")
+        Option("resolution", "r", "Resolution of output video", { "720p", "1080p" }, "720p"),
     });
 
-    cout << args.Usage("maths.exe") << endl;
+    cout << args.Usage("transcode.exe") << endl;
 
-    // maths.exe -a 3 -b 4 --operation add
-    const int argc = 8;
-    char *argv[argc] = { "maths.exe", "-p", "-a", "3", "-b", "5", "--operation", "add" };
+    // transcode.exe input.mp4 -b 1024 -r 1080p output.mp4
+    const int argc = 7;
+    char *argv[argc] = { "transcode.exe", "input.mp4", "-b", "1024", "-r", "1080p", "output.mp4" };
 
     // Args fail to parse with an error message when the syntax is bad
     if (!args.Parse(argc, argv))
     {
-        string usage = "usage: " + string(argv[0]) + "-a <n1> -b <n2> -o <add|subtract> [-v]"
-            "Adds or subtracts two numbers";
+        cout << args.Usage(argv[0]);
         return;
     }
 
@@ -56,38 +63,35 @@ void ReadmeSampleCode()
         return;
     }
 
-    // We know that number-a is set since Parse would have failed otherwise as it is required
-    // We know that number-b is set either by the command line or by the default value
-    int a = args.GetAsInt("number-a");  // Use the full name to access
-    int b = args.GetAsInt("number-b");
+    // We know that bitrate is set since Parse would have failed otherwise as it is required
+    // We know that resolution is set either by the command line or by the default value
+    int bitrate = args.GetAsInt("bitrate");  // Use the full name to access
+    string resolution = args.Get("resolution");
 
-    // We know that operation at least has a default value if it hasn't been set
-    string operation = args.Get("operation");
-    if (operation == "add")
-        cout << a << " + " << b << " = " << a + b << endl;
-    else if (operation == "subtract")
-        cout << a << " - " << b << " = " << a - b << endl;
+    // We know that the paths are set since Parse would have failed otherwise as PositionalArgs are required
+    string inputPath = args.Get("input");
+    string outputPath = args.Get("output");
+
+    //Transcode(inputPath, outputPath, bitrate, resolution);
 
 }
 
 void TestConstruction()
 {
-    AssertThrows(Args args({ }), invalid_argument);
-
     AssertThrows(Flag("", "", ""), invalid_argument);
-    AssertThrows(Flag("version", "", ""), invalid_argument);
     AssertThrows(Flag("", "v", ""), invalid_argument);
     AssertThrows(Flag("v", "v", ""), invalid_argument);
     AssertThrows(Flag("version", "vr", ""), invalid_argument);
 
-    AssertThrows(Arg("", "", ""), invalid_argument);
-    AssertThrows(Arg("version", "", ""), invalid_argument);
-    AssertThrows(Arg("", "v", ""), invalid_argument);
-    AssertThrows(Arg("v", "v", ""), invalid_argument);
-    AssertThrows(Arg("version", "vr", ""), invalid_argument);
+    AssertThrows(Option("", "", ""), invalid_argument);
+    AssertThrows(Option("", "v", ""), invalid_argument);
+    AssertThrows(Option("v", "v", ""), invalid_argument);
+    AssertThrows(Option("version", "vr", ""), invalid_argument);
+
+    AssertThrows(PositionalArg("", ""), invalid_argument);
 
     // Can't set the default to something not in the list of possibles
-    AssertThrows(Arg("colour", "c", "Colour", { "red", "blue" }, "green"), invalid_argument);
+    AssertThrows(Option("colour", "c", "Colour", { "red", "blue" }, "green"), invalid_argument);
 
 }
 
@@ -97,28 +101,31 @@ int main(int argc, char* argv[])
     //ReadmeSampleCode();
     TestConstruction();
 
-    Args args({
-        Flag("version", "v", "Display version information", Flag::Is::Required),
+    Args args(
+    {
+        PositionalArg("positional-arg-1", "Positional arg 1"),
+        PositionalArg("positional-arg-2", "Positional arg 2"),
+        Flag("version", "v", "Display version information"),
         Flag("another-flag", "a", "Another flag for some reason"),
-        Arg("colour", "c", "Colour", { "red", "green", "blue" }, Arg::Is::Required),
-        Arg("number", "n", "Number of things", "5"),
-        Arg("string", "s", "Some text"),
-        Arg("float", "f", "A float"),
-        Arg("bool", "b", "A boolean", {"true", "false"}, "false")
+        Option("colour", "c", "Colour", { "red", "green", "blue" }, Is::Required),
+        Option("number", "n", "Number of things", "5"),
+        Option("string", "s", "Some text"),
+        Option("float", "f", "A float"),
+        Option("bool", "b", "A boolean", {"true", "false"}, "false"),
     });
 
 
     AssertPrints(
         AssertTrue(!args.Parse({""})),
-        "Parsing command line failed, details: argument needs to be at least two characters including -\n");
+        "Parsing command line failed, details: argument needs to be at least one character\n");
 
     AssertPrints(
         AssertTrue(!args.Parse({ "foo" })),
-        "Parsing command line failed, details: argument needs to start with -\n");
+        "Parsing command line failed, details: colour is required but was not set\n");
 
     AssertPrints(
         AssertTrue(!args.Parse({ "-x" })),
-        "Parsing command line failed, details: couldn't find -x in specified list of arguments\n");
+        "Parsing command line failed, details: colour is required but was not set\n");
 
     AssertPrints(
         AssertTrue(!args.Parse({ "-c" })),
@@ -129,17 +136,24 @@ int main(int argc, char* argv[])
         "Parsing command line failed, details: value mauve for argument -c isn't one of the options\n");
 
     AssertPrints(
-        AssertTrue(!args.Parse({ "-c", "red" })),
-        "Parsing command line failed, details: version is required but was not set\n");
-
-    AssertPrints(
         AssertTrue(!args.Parse({ "-v" })),
         "Parsing command line failed, details: colour is required but was not set\n");
 
-    AssertTrue(args.Parse({}));
-    AssertTrue(args.Parse({ "-v", "-c", "red" }));
-    AssertTrue(args.Parse({ "-v", "-c", "red", "--number", "5", "--another-flag", "-f", "1.456", "--bool", "true"}));
-    AssertTrue(args.Parse({ "-v", "-c", "red" }));
+    AssertPrints(
+        AssertTrue(!args.Parse({})),
+        "Parsing command line failed, details: colour is required but was not set\n");
+
+    AssertPrints(
+        AssertTrue(!args.Parse({"1", "2"})),
+        "Parsing command line failed, details: colour is required but was not set\n");
+
+    AssertPrints(
+        AssertTrue(!args.Parse({ "-v", "-c", "red", "1", "2", "-x" })),
+        "Parsing command line failed, details: couldn't find -x in specified list of arguments\n");
+
+    AssertTrue(args.Parse({ "-v", "-c", "red", "1", "2" }));
+    AssertTrue(args.Parse({ "-v", "-c", "red", "--number", "5", "--another-flag", "-f", "1.456", "--bool", "true", "1", "2" }));
+    AssertTrue(args.Parse({ "-v", "-c", "red", "1", "2" }));
     // Check args clears values on Parse
     AssertFalse(args.IsSet("string"));
 
@@ -150,7 +164,7 @@ int main(int argc, char* argv[])
     AssertTrue(args.IsSet("number"));
     AssertEquals(5, args.GetAsInt("number"));
 
-    AssertTrue(args.Parse({ "-v", "-c", "red", "--number", "5", "--another-flag", "-f", "1.456", "--bool", "true" }));
+    AssertTrue(args.Parse({ "-v", "-c", "red", "--number", "5", "--another-flag", "-f", "1.456", "--bool", "true", "1", "2" }));
 
     AssertTrue(args.IsSet("version"));
     AssertTrue(args.IsSet("another-flag"));
@@ -159,18 +173,22 @@ int main(int argc, char* argv[])
     AssertTrue(!args.IsSet("string"));
     AssertTrue(args.IsSet("float"));
     AssertTrue(args.IsSet("bool"));
+    AssertTrue(args.IsSet("positional-arg-1"));
+    AssertTrue(args.IsSet("positional-arg-2"));
 
     AssertEquals("red", args.Get("colour"));
     AssertEquals("5", args.Get("number"));
     AssertEquals(5, args.GetAsInt("number"));
     AssertEquals(1.456f, args.GetAsFloat("float"));
+    AssertEquals(1, args.GetAsInt("positional-arg-1"));
+    AssertEquals(2, args.GetAsInt("positional-arg-2"))
     AssertTrue(args.GetAsBool("bool"));
 
-    AssertTrue(args.Parse({ "--bool", "false", "-v", "-c", "red" }));
+    AssertTrue(args.Parse({ "1", "2", "--bool", "false", "-v", "-c", "red" }));
     AssertFalse(args.GetAsBool("bool"));
 
-    const int argcTest = 9;
-    char *argvTest[argcTest] = { "programName", "-v", "-c", "red", "--number", "5", "-a", "-s", "foo bar" };
+    const int argcTest = 11;
+    char *argvTest[argcTest] = { "programName", "1", "-v", "-c", "red", "--number", "5", "-a", "-s", "foo bar", "2" };
 
     AssertTrue(args.Parse(argcTest, argvTest));
 
@@ -185,6 +203,8 @@ int main(int argc, char* argv[])
     AssertEquals("5", args.Get("number"));
     AssertEquals(5, args.GetAsInt("number"));
     AssertEquals("foo bar", args.Get("string"));
+    AssertEquals("1", args.Get("positional-arg-1"));
+    AssertEquals("2", args.Get("positional-arg-2"));
 
     EndTest
 }

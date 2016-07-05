@@ -19,6 +19,7 @@
 #include <list>
 #include <set>
 #include <map>
+#include <vector>
 #include <sstream>
 #include <stdexcept>
 #include <iostream>
@@ -29,6 +30,15 @@ namespace Wild
 {
     namespace CommandLine
     {
+        // Whether an arg or flag is optional or required
+        enum class Ordinality
+        {
+            Required,
+            Optional
+        };
+
+        // But "ordinality" is not a common concept, so simplify for reading
+        typedef Ordinality Is;
 
         // Represents a single argument
         // e.g. -v, --version
@@ -38,22 +48,13 @@ namespace Wild
 
             Arg(){};
 
-            // Whether an arg or flag is optional or required
-            enum class Ordinality
-            {
-                Required,
-                Optional
-            };
-            // But "ordinality" is a mouthful, so simplify for the user
-            typedef Ordinality Is;
-
             // Specify the name, letter, description and whether required for a command line arg
             // Using this constructor without possible values means that any value is accepted
             Arg(
                 const std::string &name,
                 const std::string &letter,
                 const std::string &description,
-                Ordinality ordinality = Arg::Is::Optional) :
+                Ordinality ordinality = Is::Optional) :
                 name(name),
                 letter(letter),
                 description(description),
@@ -77,7 +78,7 @@ namespace Wild
                 description(description),
                 defaultValue(defaultValue),
                 defaultValueSet(true),
-                ordinality(Arg::Is::Optional),
+                ordinality(Is::Optional),
                 isFlag(false)
             {
                 CheckValidity();
@@ -97,7 +98,7 @@ namespace Wild
                 possibleValues(possibleValues),
                 defaultValue(defaultValue),
                 defaultValueSet(true),
-                ordinality(Arg::Is::Optional),
+                ordinality(Is::Optional),
                 isFlag(false)
             {
                 if (!IsValidValue(defaultValue)) throw std::invalid_argument("default value " + defaultValue + " is not present in allowed values");
@@ -111,7 +112,7 @@ namespace Wild
                 const std::string &letter,
                 const std::string &description,
                 std::initializer_list<std::string> possibleValues,
-                Ordinality ordinality = Arg::Is::Optional) :
+                Ordinality ordinality = Is::Optional) :
                 name(name),
                 letter(letter),
                 description(description),
@@ -135,7 +136,7 @@ namespace Wild
 
             bool IsFlag() { return isFlag; }
 
-            bool IsRequired() { return ordinality == Arg::Is::Required; }
+            bool IsRequired() { return ordinality == Is::Required; }
 
             // Full name of the command e.g. "version", used as "--version"
             std::string name;
@@ -158,10 +159,20 @@ namespace Wild
             bool isFlag;
 
         protected:
-            void CheckValidity()
+            virtual void CheckValidity()
             {
                 if (name.size() < 2) throw std::invalid_argument("argument name must be two or more letters");
-                if (letter.size() != 1) throw std::invalid_argument("argument letter must be one letter");
+                if (!(letter.size() == 1 || letter.size() == 0))
+                    throw std::invalid_argument("argument letter must be one letter or blank");
+            }
+        };
+
+        class PositionalArg : public Arg
+        {
+        public:
+            PositionalArg(const std::string &name, const std::string &description) :
+                Arg(name, "", description, Is::Required)
+            {
             }
         };
 
@@ -172,14 +183,16 @@ namespace Wild
             Flag(
                 const std::string &name,
                 const std::string &letter,
-                const std::string &description,
-                Ordinality ordinality = Arg::Is::Optional) :
-                Arg(name, letter, description, ordinality)
+                const std::string &description) :
+                Arg(name, letter, description, Is::Optional)
             {
                 isFlag = true;
                 CheckValidity();
             }
         };
+
+        typedef Arg Option;
+
 
         // Represents all arguments the command line supports
         // All supported args are initialised in the constructor, then Parse is called with argc and argv
@@ -206,11 +219,23 @@ namespace Wild
         public:
             Args(const std::initializer_list<Arg> &args)
             {
-                if (args.size() == 0) throw std::invalid_argument("No arguments specified");
                 for (auto arg : args)
                 {
+                    if(m_args.count(arg.name) > 0)
+                        throw std::invalid_argument("cannot have two arguments with the same name");
                     m_args[arg.name] = arg;
-                    m_argLookup[arg.letter] = arg.name;
+                    m_insertionOrder.push_back(arg.name);
+                    if (arg.letter.size() > 0)
+                    {
+                        if (m_argLookup.count(arg.letter) > 0)
+                            throw std::invalid_argument("cannot have two arguments with the same letter");
+
+                        m_argLookup[arg.letter] = arg.name;
+                    }
+                    else
+                    {
+                        m_orderedArgNames.push_back(arg.name);
+                    }
 
                     ResetValues();
                 }
@@ -231,35 +256,57 @@ namespace Wild
                     // Clear values in case Parse is called more than once
                     ResetValues();
 
-                    // An empty command line is ok
-                    if (commandLine.size() == 0) return true;
+                    // An empty command line is ok as long as no args were required
+                    if (commandLine.size() == 0)
+                    {
+                        for (auto i : m_args)
+                        {
+                            if (i.second.IsRequired())
+                                throw std::invalid_argument(i.second.name + " is required but was not set");
+                        }
+                        return true;
+                    }
 
                     auto i = commandLine.begin();
                     auto j = commandLine.begin();
                     j++;
 
                     Arg arg;
+                    std::string nameOrValue;
                     std::string name;
                     std::string value;
                     while (i != commandLine.end())
                     {
-                        name = StripDashes(*i);
-                        if (!LookupArg(name, arg)) throw std::invalid_argument("couldn't find " + *i + " in specified list of arguments");
-
-                        if (arg.isFlag)
+                        nameOrValue = StripDashes(*i);
+                        if (!LookupArg(nameOrValue, arg))
                         {
-                            m_argValues[name] = "";
+                            // If arg doesn't have a name, it could be an ordered arg, where it's order is used to match with the name
+                            if(m_currentOrderedArgIndex >= m_orderedArgNames.size())
+                                throw std::invalid_argument("couldn't find " + *i + " in specified list of arguments");
+ 
+                            std::string name = m_orderedArgNames[m_currentOrderedArgIndex];
+                            m_argValues[name] = nameOrValue;
+                            m_currentOrderedArgIndex++;
                         }
                         else
                         {
-                            if (j == commandLine.end()) throw std::invalid_argument("argument " + *i + " given without a value");
-                            value = *j;
-                            if (!arg.IsValidValue(value)) throw std::invalid_argument("value " + value + " for argument " + *i + " isn't one of the options");
-                            m_argValues[name] = value;
-                            i++;
-                            if (i == commandLine.end()) break;
-                            j++;
+                            name = nameOrValue;
+                            if (arg.isFlag)
+                            {
+                                m_argValues[name] = "";
+                            }
+                            else
+                            {
+                                if (j == commandLine.end()) throw std::invalid_argument("argument " + *i + " given without a value");
+                                value = *j;
+                                if (!arg.IsValidValue(value)) throw std::invalid_argument("value " + value + " for argument " + *i + " isn't one of the options");
+                                m_argValues[name] = value;
+                                i++;
+                                if (i == commandLine.end()) break;
+                                j++;
+                            }
                         }
+
                         i++;
                         if (i == commandLine.end()) break;
                         j++;
@@ -321,13 +368,13 @@ namespace Wild
             {
                 std::stringstream s;
                 std::stringstream line;
-                line << "usage:" << appName << " ";
+                line << "usage: " << appName << " ";
 
-                for (auto i : m_args)
+                for (auto i : m_insertionOrder)
                 {
-                    Arg a = i.second;
+                    Arg a = m_args[i];
 
-                    s << std::setw(numSpacesBeforeDescription) << std::left << std::setfill(' ') << a.letter + ", " + a.name;
+                    s << std::setw(numSpacesBeforeDescription) << std::left << std::setfill(' ') << a.letter + (a.letter.size() > 0 ? ", " : "") + a.name;
                     s << std::setw(numSpacesBeforeDescription) << std::left << std::setfill(' ') << a.description;
                     s << std::endl;
                     if (a.possibleValues.size() > 0)
@@ -362,7 +409,10 @@ namespace Wild
                     else
                     {
                         if (a.IsRequired())
-                            line << "-" << a.letter << " <" << a.name << "> ";
+                            if(a.letter.size() == 0)
+                                line << "<" << a.name << "> ";
+                            else
+                                line << "-" << a.letter << " <" << a.name << "> ";
                         else
                             line << "[-" << a.letter << " " << a.name << "] ";
                     }
@@ -390,10 +440,10 @@ namespace Wild
 
             std::string StripDashes(const std::string &s)
             {
-                if (s.size() < 2) throw std::invalid_argument("argument needs to be at least two characters including -");
+                if (s.size() == 0) throw std::invalid_argument("argument needs to be at least one character");
 
                 std::string first = s.substr(0, 1);
-                if (first != "-") throw std::invalid_argument("argument needs to start with -");
+                if (first != "-") return s;  // could be ordered arg
 
                 std::string second = s.substr(1, 1);
 
@@ -409,6 +459,7 @@ namespace Wild
             void ResetValues()
             {
                 m_argValues.clear();
+                m_currentOrderedArgIndex = 0;
                 for (auto i : m_args)
                 {
                     if (i.second.defaultValueSet)
@@ -417,6 +468,9 @@ namespace Wild
             }
 
             std::map<std::string, Arg> m_args;
+            std::vector<std::string> m_insertionOrder;
+            std::vector<std::string> m_orderedArgNames;
+            std::size_t m_currentOrderedArgIndex = 0;
             std::map<std::string, std::string> m_argLookup;
             std::map<std::string, std::string> m_argValues;
         };

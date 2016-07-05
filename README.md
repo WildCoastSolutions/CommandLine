@@ -19,34 +19,41 @@ Travis CI build & test status: [![Build Status](https://api.travis-ci.org/WildCo
 using namespace Wild::CommandLine;
 using namespace std;
 
-// This is a simple app that adds or subtracts using
-// two numbers provided on the command line
-// Sample command line - maths.exe -a 3 -b 5 --operation add
+// This is a simple video transcoding app example
+// Sample command line: transcode input.mp4 -b 1024 -r 1080p output.mp4
 
 int main(int argc, char* argv[])
 {
-    // Setup args that this application supports, 
+    // Setup args that this application supports, in this case it is a simple video transcoding app
+    // It takes an input file, a new bitrate and resolution, and writes to the given output file
     Args args({
-        // name, letter, description
+        // The order of Flags and Options given on the command line doesn't matter
+        // The order of PositionalArgs only matters relative to other PositionalArgs
+
+        // A PositionalArg has no letter or name associated with it, it is assigned 
+        // by virtue of where it appears on the command line.
+        PositionalArg("input", "Input video file path"),
+        PositionalArg("output", "Output video file path"),
+
+        // Flag - name, letter, description
         Flag("version", "v", "Display version information"),
-        Flag("please", "p", "The magic word", Flag::Is::Required),
+        Flag("debug", "d", "Print debug information"),
         
-        // name, letter, description, whether required
-        Arg("number-a", "a", "First number", Arg::Is::Required),
+        // Option - name, letter, description, whether it is required or not
+        // An option is generally not required, but this is possible when you want to be name the required option rather
+        // than use a positional argument with no name
+        Option("bitrate", "b", "Bitrate of output video in Kbps", Is::Required),
 
-        // name, letter, description, default value
-        Arg("number-b", "b", "Second number", "4"),
-
-        // name, letter, description, possible values, default value
-        // setting a default value means it's optional on the command line)
-        Arg("operation", "o", "Operation to use", { "add", "subtract" }, "add")
+        // name, letter, description, possible values, default value (setting a default value means it's optional on the command line)
+        Option("resolution", "r", "Resolution of output video", { "720p", "1080p" }, "720p"),
     });
 
+    // E.g. transcode.exe input.mp4 -b 1024 -r 1080p output.mp4
+    
     // Args fail to parse with an error message when the syntax is bad
     if (!args.Parse(argc, argv))
     {
-        // Usage prints out how to use and the available options
-        cout << args.Usage(string(argv[0])) << endl;
+        cout << args.Usage(argv[0]);
         return;
     }
 
@@ -56,27 +63,20 @@ int main(int argc, char* argv[])
         return;
     }
 
-    // We know that number-a is set since it's required
-    // We know that number-b is set either by the command line
-    // or by the default value
-    int a = args.GetAsInt("number-a");  // Use the full name to access
-    int b = args.GetAsInt("number-b");
+    // We know that bitrate is set since Parse would have failed otherwise as it is required
+    // We know that resolution is set either by the command line or by the default value
+    int bitrate = args.GetAsInt("bitrate");  // Use the full name to access
+    string resolution = args.Get("resolution");
 
-    // Operation has a default value if it hasn't been set by the user
-    string operation = args.Get("operation");
-    if (operation == "add")
-        cout << a << " + " << b << " = " << a + b << endl;
-    else if (operation == "subtract")
-        cout << a << " - " << b << " = " << a - b << endl;
+    // We know that the paths are set since Parse would have failed otherwise as PositionalArgs are required
+    string inputPath = args.Get("input");
+    string outputPath = args.Get("output");
 
-```
-
-The above code with the sample command line results in the following being printed to console
+    // Defined elsewhere
+    Transcode(inputPath, outputPath, bitrate, resolution);
 
 ```
-// maths.exe -a 3 -b 5 --operation add
-3 + 5 = 8
-```
+
 
 # Installing
 
@@ -85,18 +85,6 @@ The above code with the sample command line results in the following being print
 All you need to use this library is to put `CommandLine.h` in your project and include it in your code.
 
 [Download the latest version here (right click, download)](https://raw.githubusercontent.com/WildCoastSolutions/CommandLine/master/CommandLine.h).
-
-## Nuget
-
-There is also a Nuget package for Visual Studio users, more info at:
-
-https://www.nuget.org/packages/WildCommandLine
-
-The correct include path to use after installing the Nuget package is
-
-```C++
-#include "Wild/CommandLine.h"
-```
 
 ## Namespace
 
@@ -108,7 +96,7 @@ First you need to specify all the flags and arguments your application is going 
 
 Once this is established, Parse is called with the given command line (argv). Then you can get the state of args and their values and take action.
 
-**Flag vs Arg**
+**Flag vs Option**
 
 For the purposes of this library, flags are command line options that take no value, and args are options that do take a value.
 
@@ -119,21 +107,22 @@ The Args object is the container for all specified arguments and handles parsing
 ```C++
 // These are the supported constructors
 Args args({
-    Flag(name, letter, description, [Flag::Is::Required]),
-    Arg(name, letter, description, [default_value]).
-    Arg(name, letter, description, [possible_values], [default_value]).
-    Arg(name, letter, description, [possible_values], [Arg::Is::Required])
+    Flag(name, letter, description),
+    Option(name, letter, description, [default_value]),
+    Option(name, letter, description, [possible_values], [default_value]),
+    Option(name, letter, description, [possible_values], [Is::Required]),
+    PositionalArg(name, letter, description, [possible_values], [default_value])
     ...
     });
 ```
 
-Note that setting a default value and marking an Arg as required are mutually exclusive - if it is required then the user must supply a value.
+Note that setting a default value and marking an Option as required are mutually exclusive - if it is required then the user must supply a value.
 
-For example: We want to allow the user to supply a colour on the command line, one of red, green and blue, and if they don't supply one we'll just go with red. The Arg would look like:
+For example: We want to allow the user to supply a colour on the command line, one of red, green and blue, and if they don't supply one we'll just go with red. The Option would look like:
 
 ```C++
     Args args({
-        Arg("colour", "c", "Choose a colour", {"red", "green", "blue"}, "red")
+        Option("colour", "c", "Choose a colour", {"red", "green", "blue"}, "red")
     });
 ```
 
@@ -144,7 +133,7 @@ Call `args.Parse` with `argc` and `argv` to parse the command line. Parse will p
 * an argument/flag was given that wasn't specified in the Args constructor
 * a required argument/flag wasn't given
 * a value for an argument was given that wasn't in the list of allowed values
-* an argument was given without a value
+* an option was given without a value
 
 It's typical behaviour to print out the usage message when parsing fails, as in the sample code.
 
@@ -183,7 +172,7 @@ Note that the [Unit Testing](https://github.com/WildCoastSolutions/UnitTesting) 
 
 `CommandLine.sln` contains the library and test projects, compilation also runs the tests.
 
-It was built with VS2013 but should work with other versions though it does require C++11 features.
+It was built with VS2015 but should work with other versions though it does require C++11 features.
 
 ### Linux
 
@@ -198,4 +187,4 @@ Test\CommandLineTest
 
 ## Scaling Up
 
-If you need to go beyond what this library offers, boost program_options is a good next step.
+If you need to go beyond what this library offers, boost program_options may be of interest.
