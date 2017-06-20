@@ -156,7 +156,9 @@ namespace Wild
             // Required or Optional
             Ordinality ordinality;
 
-            bool isFlag;
+            bool isFlag = false;
+
+            bool isPositional = false;
 
         protected:
             virtual void CheckValidity()
@@ -170,9 +172,10 @@ namespace Wild
         class PositionalArg : public Arg
         {
         public:
-            PositionalArg(const std::string &name, const std::string &description) :
-                Arg(name, "", description, Is::Required)
+            PositionalArg(const std::string &name, const std::string &description, Ordinality ordinality = Is::Required) :
+                Arg(name, "", description, ordinality)
             {
+                isPositional = true;
             }
         };
 
@@ -223,6 +226,9 @@ namespace Wild
                 {
                     if(m_args.count(arg.name) > 0)
                         throw std::invalid_argument("cannot have two arguments with the same name");
+
+                    //if (arg.isPositional &&)
+
                     m_args[arg.name] = arg;
                     m_insertionOrder.push_back(arg.name);
                     if (arg.letter.size() > 0)
@@ -473,6 +479,8 @@ namespace Wild
             std::size_t m_currentOrderedArgIndex = 0;
             std::map<std::string, std::string> m_argLookup;
             std::map<std::string, std::string> m_argValues;
+            // Afer an optional positional arg, all remaining ones must be optional as well
+            bool m_seenOptionalPositionalArg = false;
         };
     }
 }

@@ -105,6 +105,7 @@ int main(int argc, char* argv[])
     {
         PositionalArg("positional-arg-1", "Positional arg 1"),
         PositionalArg("positional-arg-2", "Positional arg 2"),
+        PositionalArg("positional-arg-3", "Positional arg 3", Is::Optional),
         Flag("version", "v", "Display version information"),
         Flag("another-flag", "a", "Another flag for some reason"),
         Option("colour", "c", "Colour", { "red", "green", "blue" }, Is::Required),
@@ -148,7 +149,7 @@ int main(int argc, char* argv[])
         "Parsing command line failed, details: colour is required but was not set\n");
 
     AssertPrints(
-        AssertTrue(!args.Parse({ "-v", "-c", "red", "1", "2", "-x" })),
+        AssertTrue(!args.Parse({ "-v", "-c", "red", "1", "2", "3", "-x" })),
         "Parsing command line failed, details: couldn't find -x in specified list of arguments\n");
 
     AssertTrue(args.Parse({ "-v", "-c", "red", "1", "2" }));
